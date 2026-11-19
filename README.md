@@ -76,7 +76,10 @@ workflow/
 
 - 🎬 Demo video: [watch](https://czibuahmksmifbzapnkv.supabase.co/storage/v1/object/public/smm-images/videos/2-lead-processing-hy.mp4)
 - 🧪 Live form: [open](https://n8n-xwzd.srv2115236.hstgr.cloud/form/realty-lead-demo)
-- n8n canvas screenshot: *coming soon*
+
+**Lead qualifier workflow**
+
+![Lead qualifier workflow](docs/lead-qualifier.png)
 
 ## What I learned
 
