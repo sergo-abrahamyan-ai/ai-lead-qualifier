@@ -1,0 +1,697 @@
+{
+  "name": "AI Lead Qualifier (Real Estate Demo)",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Demo Realty — подбор недвижимости",
+        "formDescription": "Ереван · Дубай · Москва. Оставьте заявку — подберём варианты под ваш бюджет и цели.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Имя",
+              "fieldName": "name",
+              "placeholder": "Анна",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Телефон (WhatsApp)",
+              "fieldName": "phone",
+              "placeholder": "+374 91 123456",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Email",
+              "fieldType": "email",
+              "fieldName": "email",
+              "placeholder": "anna@mail.com"
+            },
+            {
+              "fieldLabel": "Город",
+              "fieldType": "dropdown",
+              "fieldName": "city",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Ереван"
+                  },
+                  {
+                    "option": "Дубай"
+                  },
+                  {
+                    "option": "Москва"
+                  },
+                  {
+                    "option": "Пока не знаю"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Бюджет",
+              "fieldType": "dropdown",
+              "fieldName": "budget",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "до $100 000"
+                  },
+                  {
+                    "option": "$100 000 – 300 000"
+                  },
+                  {
+                    "option": "$300 000 – 700 000"
+                  },
+                  {
+                    "option": "от $700 000"
+                  },
+                  {
+                    "option": "Пока не знаю"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Цель покупки",
+              "fieldType": "dropdown",
+              "fieldName": "purpose",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Для жизни"
+                  },
+                  {
+                    "option": "Инвестиции"
+                  },
+                  {
+                    "option": "Пока не знаю"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Когда планируете покупку",
+              "fieldType": "dropdown",
+              "fieldName": "timeline",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "В ближайший месяц"
+                  },
+                  {
+                    "option": "Через 1–3 месяца"
+                  },
+                  {
+                    "option": "Через 3–6 месяцев"
+                  },
+                  {
+                    "option": "Просто смотрю варианты"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Комментарий",
+              "fieldType": "textarea",
+              "fieldName": "message",
+              "placeholder": "Например: 2 спальни, рядом с морем, рассрочка"
+            }
+          ]
+        },
+        "options": {
+          "appendAttribution": false,
+          "buttonLabel": "Отправить заявку",
+          "path": "realty-lead-demo",
+          "respondWithOptions": {
+            "values": {
+              "formSubmittedText": "Спасибо! Заявка получена — менеджер свяжется с вами в течение 15 минут."
+            }
+          },
+          "ignoreBots": true
+        }
+      },
+      "id": "9e3eab92-e462-46b8-bca0-df50818057cd",
+      "name": "Lead Form",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        0,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=New real estate lead from the website form:\nName: {{ $json.name }}\nCity: {{ $json.city }}\nBudget: {{ $json.budget }}\nPurpose: {{ $json.purpose }}\nTimeline: {{ $json.timeline }}\nComment: {{ $json.message || '-' }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You qualify leads for an international real estate agency (Yerevan, Dubai, Moscow).\nReturn a score 0-100 and a temperature:\n- hot (70-100): plans to buy within 3 months AND has a known budget AND a clear purpose.\n- warm (40-69): 3-6 months, or budget/purpose unclear but real interest.\n- cold (0-39): \"just looking\", no budget and no timeline, or the comment looks like spam/test.\nA detailed, specific comment raises the score; budget from $300,000 raises it a little.\nsummary: one sentence in Russian with the key facts. next_step: one concrete action for the manager in Russian.\ninterest: a short Russian phrase describing what the client is looking for (city, property type, purpose, budget) to insert into a WhatsApp message; never put a full stop at the end.\ncity_en must be one of: Yerevan, Dubai, Moscow, Not sure. purpose_en must be one of: Living, Investment, Not sure."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "id": "6b41e39a-214b-431e-a0af-ae82422742a8",
+      "name": "AI Lead Scoring",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        224,
+        112
+      ],
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {
+          "maxTokens": 2000,
+          "reasoningEffort": "low"
+        }
+      },
+      "id": "e084830b-1ef3-4906-b58b-d83b5dce78f7",
+      "name": "OpenAI Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        128,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\"score\":82,\"temperature\":\"hot\",\"summary\":\"Инвестор, Дубай, $300–700k, покупка в ближайший месяц, хочет рассрочку.\",\"next_step\":\"Позвонить сегодня, прислать 3 объекта с рассрочкой в Dubai Marina.\",\"interest\":\"квартира в Дубае для инвестиций, бюджет $300 000 – 700 000\",\"city_en\":\"Dubai\",\"purpose_en\":\"Investment\"}"
+      },
+      "id": "707e7a36-f8f5-45f2-9a31-a5ab6ccfffc9",
+      "name": "Lead Score Format",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        368,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "l1",
+              "name": "name",
+              "value": "={{ String($(\"Lead Form\").item.json.name || '').trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "l2",
+              "name": "phone",
+              "value": "={{ (() => { let d = String($(\"Lead Form\").item.json.phone || '').replace(/\\D/g, ''); if (d.startsWith('00')) d = d.slice(2); if (d.length === 9 && d.startsWith('0')) d = '374' + d.slice(1); if (d.length === 8) d = '374' + d; return '+' + d; })() }}",
+              "type": "string"
+            },
+            {
+              "id": "l3",
+              "name": "email",
+              "value": "={{ $(\"Lead Form\").item.json.email || \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "l4",
+              "name": "budget",
+              "value": "={{ $(\"Lead Form\").item.json.budget }}",
+              "type": "string"
+            },
+            {
+              "id": "l5",
+              "name": "timeline",
+              "value": "={{ $(\"Lead Form\").item.json.timeline }}",
+              "type": "string"
+            },
+            {
+              "id": "l6",
+              "name": "message",
+              "value": "={{ $(\"Lead Form\").item.json.message || \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "l7",
+              "name": "score",
+              "value": "={{ $json.output?.score ?? 50 }}",
+              "type": "number"
+            },
+            {
+              "id": "l8",
+              "name": "temperature",
+              "value": "={{ $json.output?.temperature ?? 'warm' }}",
+              "type": "string"
+            },
+            {
+              "id": "l9",
+              "name": "summary",
+              "value": "={{ $json.output?.summary ?? 'AI не смог оценить заявку, проверьте её вручную.' }}",
+              "type": "string"
+            },
+            {
+              "id": "l10",
+              "name": "next_step",
+              "value": "={{ $json.output?.next_step ?? 'Связаться с клиентом и уточнить запрос.' }}",
+              "type": "string"
+            },
+            {
+              "id": "l11",
+              "name": "interest",
+              "value": "={{ $json.output?.interest ?? 'подбор недвижимости' }}",
+              "type": "string"
+            },
+            {
+              "id": "l12",
+              "name": "city",
+              "value": "={{ $json.output?.city_en ?? 'Not sure' }}",
+              "type": "string"
+            },
+            {
+              "id": "l13",
+              "name": "purpose",
+              "value": "={{ $json.output?.purpose_en ?? 'Not sure' }}",
+              "type": "string"
+            },
+            {
+              "id": "l14",
+              "name": "nameSafe",
+              "value": "={{ String($(\"Lead Form\").item.json.name || '').trim().replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[c]) }}",
+              "type": "string"
+            },
+            {
+              "id": "l15",
+              "name": "summarySafe",
+              "value": "={{ String($json.output?.summary ?? 'AI не смог оценить заявку, проверьте её вручную.').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[c]) }}",
+              "type": "string"
+            },
+            {
+              "id": "l16",
+              "name": "nextStepSafe",
+              "value": "={{ String($json.output?.next_step ?? 'Связаться с клиентом и уточнить запрос.').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[c]) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "cee5ea51-efc2-46f1-8251-797a4aadd7b1",
+      "name": "Lead Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        576,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "mode": "id",
+          "value": "YOUR_AIRTABLE_BASE_ID"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "id",
+          "value": "YOUR_AIRTABLE_LEADS_TABLE_ID"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $json.name }}",
+            "Phone": "={{ $json.phone }}",
+            "Email": "={{ $json.email }}",
+            "City": "={{ $json.city }}",
+            "Budget": "={{ $json.budget }}",
+            "Purpose": "={{ $json.purpose }}",
+            "Timeline": "={{ $json.timeline }}",
+            "Message": "={{ $json.message }}",
+            "Score": "={{ $json.score }}",
+            "Temperature": "={{ $json.temperature }}",
+            "AI Summary": "={{ $json.summary }}",
+            "Next Step": "={{ $json.next_step }}",
+            "Status": "new",
+            "Created": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "City",
+              "displayName": "City",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Budget",
+              "displayName": "Budget",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Purpose",
+              "displayName": "Purpose",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Timeline",
+              "displayName": "Timeline",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Message",
+              "displayName": "Message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Score",
+              "displayName": "Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Temperature",
+              "displayName": "Temperature",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "AI Summary",
+              "displayName": "AI Summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Next Step",
+              "displayName": "Next Step",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Created",
+              "displayName": "Created",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {
+          "typecast": true
+        }
+      },
+      "id": "732cb04e-3e58-4e67-a14f-8673887d61fe",
+      "name": "Save to CRM",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        800,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $(\"Lead Data\").item.json.temperature }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              },
+              "rightValue": "cold"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "7b2f0810-79a7-4669-9a36-49f2375974cf",
+      "name": "Hot or Warm?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1024,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "phoneNumberId": "YOUR_WHATSAPP_PHONE_NUMBER_ID",
+        "recipientPhoneNumber": "={{ $(\"Lead Data\").item.json.phone.replace(/\\D/g, \"\") }}",
+        "template": "lead_welcome_ru|ru",
+        "components": {
+          "component": [
+            {
+              "bodyParameters": {
+                "parameter": [
+                  {
+                    "text": "={{ $(\"Lead Data\").item.json.name }}"
+                  },
+                  {
+                    "text": "={{ $(\"Lead Data\").item.json.interest }}"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "id": "e332e64b-b4f4-45ef-a304-9a0cfd0813cd",
+      "name": "Instant WhatsApp to Lead",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        1248,
+        16
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "={{ $(\"Lead Data\").item.json.temperature === 'hot' ? '🔥 ГОРЯЧИЙ ЛИД' : '🙂 Тёплый лид' }} — {{ $(\"Lead Data\").item.json.score }}/100\n\n👤 {{ $(\"Lead Data\").item.json.nameSafe }} · {{ $(\"Lead Data\").item.json.phone }}\n📍 {{ $(\"Lead Form\").item.json.city }} · 💰 {{ $(\"Lead Data\").item.json.budget }}\n🎯 {{ $(\"Lead Form\").item.json.purpose }} · ⏱ {{ $(\"Lead Data\").item.json.timeline }}\n\n🧠 {{ $(\"Lead Data\").item.json.summarySafe }}\n👉 {{ $(\"Lead Data\").item.json.nextStepSafe }}\n\n{{ $json.messages ? '✅ Клиенту уже отправлено приветствие в WhatsApp.' : '⚠️ WhatsApp не отправлен — напишите клиенту вручную.' }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "c9d0eb7a-dc4c-417b-a43a-293883f1a0c2",
+      "name": "Alert Manager (hot/warm)",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1472,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "=❄️ Холодный лид — {{ $(\"Lead Data\").item.json.score }}/100\n👤 {{ $(\"Lead Data\").item.json.nameSafe }} · {{ $(\"Lead Data\").item.json.phone }}\n🧠 {{ $(\"Lead Data\").item.json.summarySafe }}\nСохранён в CRM, можно связаться позже.",
+        "additionalFields": {
+          "appendAttribution": false,
+          "disable_notification": true,
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "fe4cdf3d-fe5b-4834-bfd7-103861064c7d",
+      "name": "Alert Manager (cold)",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1248,
+        208
+      ]
+    }
+  ],
+  "connections": {
+    "Lead Form": {
+      "main": [
+        [
+          {
+            "node": "AI Lead Scoring",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Lead Scoring": {
+      "main": [
+        [
+          {
+            "node": "Lead Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Lead Scoring",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lead Score Format": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Lead Scoring",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lead Data": {
+      "main": [
+        [
+          {
+            "node": "Save to CRM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save to CRM": {
+      "main": [
+        [
+          {
+            "node": "Hot or Warm?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hot or Warm?": {
+      "main": [
+        [
+          {
+            "node": "Instant WhatsApp to Lead",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Alert Manager (cold)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Instant WhatsApp to Lead": {
+      "main": [
+        [
+          {
+            "node": "Alert Manager (hot/warm)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}
